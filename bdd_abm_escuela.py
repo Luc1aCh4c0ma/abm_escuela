@@ -8,6 +8,7 @@ conexion = mysql.connector.connect(host="localhost", user="root", password="1234
 def cargar_datos():
     tree.delete(*tree.get_children()) 
     cursor = conexion.cursor()
+    # SELECT para que solo muestre los regulares y los activos 
     cursor.execute("SELECT Alumnos.IDALUMNO, Alumnos.NOMBRE, Alumnos.APELLIDO, Alumnos.DNI, Carreras.NOMBRE, EstadoAlumno.NOMBRE FROM Alumnos JOIN Carreras ON Alumnos.IDCARRERA = Carreras.IDCARRERA JOIN EstadoAlumno ON Alumnos.IDESTADOALUMNO = EstadoAlumno.IDESTADOALUMNO WHERE EstadoAlumno.NOMBRE = 'Regular' AND Alumnos.ESTADO = 'Activo'")
     for row in cursor.fetchall():
         tree.insert("", "end", values=row)
@@ -20,6 +21,7 @@ def guardar_alumno():
     estado_alumno_nombre =estado_alumno_combobox.get()  
     estado_alumno = None  
 
+    # Validación del DNI
     if not dni.isdigit() or len(dni) != 8:
         messagebox.showerror("Error", "El DNI debe contener exactamente 8 números.")
         return
@@ -36,6 +38,7 @@ def guardar_alumno():
     else:
         mostrar_alerta("Los campos son obligatorios. Debe completarlos.")
 
+# Función para limpiar la grilla 
 def limpiar():
     nombre_entry.delete(0, tk.END)
     apellido_entry.delete(0, tk.END)
@@ -76,6 +79,12 @@ def obtener_id_estado(nombre_estado):
             return estado[0]
     return None
 
+def obtener_id_carrera(nombre_carrera):
+    for carrera in carreras:
+        if carrera[1] == nombre_carrera:
+            return carrera[0]
+    return None
+
 def mostrar_alerta(mensaje):
     messagebox.showwarning("Alerta", mensaje)
 
@@ -103,7 +112,8 @@ def editar_alumno (event):
 
     carrera_combobox.set(carrera_nombre) 
     estado_alumno_combobox.set(estado_alumno_nombre)
-
+    
+    # Habilitar el botón de "Editar"
     editar_button.config(state=tk.NORMAL)
     global id_alumno_seleccionado
     id_alumno_seleccionado = id_alumno
@@ -115,7 +125,8 @@ def guardar_cambios():
     carrera_nombre = carrera_combobox.get()
     estado_alumno_nombre = estado_alumno_combobox.get()  
     estado_alumno = None  
-
+    
+    # Validacion de DNI
     if not dni.isdigit() or len(dni) != 8:
         messagebox.showerror("Error", "El DNI debe contener exactamente 8 números.")
         return
@@ -125,7 +136,8 @@ def guardar_cambios():
         estado_alumno = obtener_id_estado(estado_alumno_nombre)
 
         cursor = conexion.cursor()
-
+        
+        # Actualizar en base de datos la información
         cursor.execute("UPDATE Alumnos SET NOMBRE = %s, APELLIDO = %s, DNI = %s, IDCARRERA = %s, IDESTADOALUMNO = %s WHERE IDALUMNO = %s", (nombre, apellido, dni, carrera_id, estado_alumno, id_alumno_seleccionado))
         conexion.commit()
         cargar_datos() 
@@ -134,14 +146,11 @@ def guardar_cambios():
     else:
         mostrar_alerta("Los campos son obligatorios. Debe completarlos.")
 
-def obtener_id_carrera(nombre_carrera):
-    for carrera in carreras:
-        if carrera[1] == nombre_carrera:
-            return carrera[0]
-    return None
 
+
+#En la base de datos al final agregué una columna nueva en alumnos de "ACTIVO, INACTIVO"
 def eliminar_alumno():
-    seleccion = tree.selection()
+    seleccion = tree.selection() 
     if not seleccion:
         mostrar_alerta("Por favor, seleccione un alumno antes de eliminarlo.")
         return
@@ -150,6 +159,7 @@ def eliminar_alumno():
     id_alumno = item['values'][0]
 
     cursor = conexion.cursor()
+    # Actualizar en base de datos la información
     cursor.execute("UPDATE Alumnos SET ESTADO = 'Inactivo' WHERE IDALUMNO = %s", (id_alumno,))
     conexion.commit()
     cargar_datos()
@@ -158,7 +168,7 @@ def eliminar_alumno():
 
 
 
-
+# Definición Grafica 
 root = tk.Tk()
 root.title("Consulta de Alumnos")
 
