@@ -162,15 +162,18 @@ def eliminar_alumno():
     nombre_alumno = item['values'][1]  # Suponiendo que el nombre del alumno se encuentra en la segunda columna
     
     # Preguntar al usuario si realmente desea eliminar el alumno
-    confirmacion = tkinter.simpledialog.askstring("Confirmar eliminación", f"¿Estás seguro de eliminar al alumno {nombre_alumno}? (Sí/No)")
-    
-    if confirmacion and confirmacion.lower() == "si":
-        cursor = conexion.cursor()
-        cursor.execute("UPDATE Alumnos SET ESTADO = 'Inactivo' WHERE IDALUMNO = %s", (id_alumno,))
-        conexion.commit()
-        cargar_datos()
-        mostrar_alerta(f"Alumno {nombre_alumno} eliminado correctamente.")
-
+    while True:
+        confirmacion = tkinter.simpledialog.askstring("Confirmar eliminación", f"¿Estás seguro de eliminar al alumno {nombre_alumno}? (Sí/No)")
+        
+        if confirmacion and confirmacion.lower() == "si":
+            cursor = conexion.cursor()
+            cursor.execute("UPDATE Alumnos SET ESTADO = 'Inactivo' WHERE IDALUMNO = %s", (id_alumno,))
+            conexion.commit()
+            cargar_datos()
+            mostrar_alerta(f"Alumno {nombre_alumno} eliminado correctamente.")
+            break
+        elif confirmacion and confirmacion.lower() == "no":
+            break
 
 # Definición Grafica 
 root = tk.Tk()
