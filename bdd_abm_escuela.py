@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+import tkinter.simpledialog
 import mysql.connector
 
 conexion = mysql.connector.connect(host="localhost", user="root", password="123456", database="escuela")
@@ -150,22 +151,25 @@ def guardar_cambios():
 
 #En la base de datos al final agregué una columna nueva en alumnos de "ACTIVO, INACTIVO"
 def eliminar_alumno():
-    seleccion = tree.selection() 
+    seleccion = tree.selection()
     if not seleccion:
-        mostrar_alerta("Por favor, seleccione un alumno antes de eliminarlo.")
         return
-
+    
     item = tree.item(seleccion)
     id_alumno = item['values'][0]
 
-    cursor = conexion.cursor()
-    # Actualizar en base de datos la información
-    cursor.execute("UPDATE Alumnos SET ESTADO = 'Inactivo' WHERE IDALUMNO = %s", (id_alumno,))
-    conexion.commit()
-    cargar_datos()
-    mostrar_alerta("Alumno eliminado correctamente.")
-
-
+    # Obtener el nombre del alumno
+    nombre_alumno = item['values'][1]  # Suponiendo que el nombre del alumno se encuentra en la segunda columna
+    
+    # Preguntar al usuario si realmente desea eliminar el alumno
+    confirmacion = tkinter.simpledialog.askstring("Confirmar eliminación", f"¿Estás seguro de eliminar al alumno {nombre_alumno}? (Sí/No)")
+    
+    if confirmacion and confirmacion.lower() == "si":
+        cursor = conexion.cursor()
+        cursor.execute("UPDATE Alumnos SET ESTADO = 'Inactivo' WHERE IDALUMNO = %s", (id_alumno,))
+        conexion.commit()
+        cargar_datos()
+        mostrar_alerta(f"Alumno {nombre_alumno} eliminado correctamente.")
 
 
 # Definición Grafica 
