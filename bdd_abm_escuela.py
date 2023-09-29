@@ -9,8 +9,8 @@ conexion = mysql.connector.connect(host="localhost", user="root", password="1234
 def cargar_datos():
     tree.delete(*tree.get_children()) 
     cursor = conexion.cursor()
-    # SELECT para que solo muestre los regulares y los activos 
-    cursor.execute("SELECT Alumnos.IDALUMNO, Alumnos.NOMBRE, Alumnos.APELLIDO, Alumnos.DNI, Carreras.NOMBRE, EstadoAlumno.NOMBRE FROM Alumnos JOIN Carreras ON Alumnos.IDCARRERA = Carreras.IDCARRERA JOIN EstadoAlumno ON Alumnos.IDESTADOALUMNO = EstadoAlumno.IDESTADOALUMNO WHERE EstadoAlumno.NOMBRE = 'Regular' AND Alumnos.ESTADO = 'Activo'")
+    # SELECT para que solo muestre los Regulares, Promocionados y Activos 
+    cursor.execute("SELECT Alumnos.IDALUMNO, Alumnos.NOMBRE, Alumnos.APELLIDO, Alumnos.DNI, Carreras.NOMBRE, EstadoAlumno.NOMBRE FROM Alumnos JOIN Carreras ON Alumnos.IDCARRERA = Carreras.IDCARRERA JOIN EstadoAlumno ON Alumnos.IDESTADOALUMNO = EstadoAlumno.IDESTADOALUMNO WHERE EstadoAlumno.NOMBRE IN ('REGULAR', 'PROMOCIONADO') AND Alumnos.ESTADO = 'Activo'")
     for row in cursor.fetchall():
         tree.insert("", "end", values=row)
 
@@ -148,7 +148,6 @@ def guardar_cambios():
         mostrar_alerta("Los campos son obligatorios. Debe completarlos.")
 
 
-
 #En la base de datos al final agregué una columna nueva en alumnos de "ACTIVO, INACTIVO"
 def eliminar_alumno():
     seleccion = tree.selection()
@@ -157,23 +156,17 @@ def eliminar_alumno():
     
     item = tree.item(seleccion)
     id_alumno = item['values'][0]
-
-    # Obtener el nombre del alumno
-    nombre_alumno = item['values'][1]  # Suponiendo que el nombre del alumno se encuentra en la segunda columna
+    nombre_alumno = item['values'][1]
     
-    # Preguntar al usuario si realmente desea eliminar el alumno
-    while True:
-        confirmacion = tkinter.simpledialog.askstring("Confirmar eliminación", f"¿Estás seguro de eliminar al alumno {nombre_alumno}? (Sí/No)")
-        
-        if confirmacion and confirmacion.lower() == "si":
-            cursor = conexion.cursor()
-            cursor.execute("UPDATE Alumnos SET ESTADO = 'Inactivo' WHERE IDALUMNO = %s", (id_alumno,))
-            conexion.commit()
-            cargar_datos()
-            mostrar_alerta(f"Alumno {nombre_alumno} eliminado correctamente.")
-            break
-        elif confirmacion and confirmacion.lower() == "no":
-            break
+    # ventana de confirmación
+    confirmacion = tkinter.messagebox.askyesno("Confirmar Eliminación", f"¿Estás seguro de eliminar al alumno {nombre_alumno}?")
+
+    if confirmacion:
+        cursor = conexion.cursor()
+        cursor.execute("UPDATE Alumnos SET ESTADO = 'Inactivo' WHERE IDALUMNO = %s", (id_alumno,))
+        conexion.commit()
+        cargar_datos()
+        mostrar_alerta(f"Alumno {nombre_alumno} marcado como inactivo correctamente.")
 
 # Definición Grafica 
 root = tk.Tk()
